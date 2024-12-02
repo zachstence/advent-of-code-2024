@@ -35,8 +35,15 @@ const part1 = (rawInput: string) => {
 
 const part2 = (rawInput: string) => {
   const input = parseInput(rawInput);
-
-  return;
+  const safeReports = input.filter((report) => {
+    if (isReportSafe(report)) return true;
+    const reportsWithOneRemoved = report.reduce<Report[]>((acc, _, i) => {
+      acc.push([...report.slice(0, i), ...report.slice(i + 1)]);
+      return acc;
+    }, []);
+    return reportsWithOneRemoved.some(isReportSafe);
+  });
+  return safeReports.length.toString();
 };
 
 run({
