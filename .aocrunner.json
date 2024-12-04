@@ -53,13 +53,13 @@
         "solved": true,
         "result": "2549",
         "attempts": [],
-        "time": 30.579028
+        "time": 29.295206
       },
       "part2": {
-        "solved": false,
-        "result": null,
+        "solved": true,
+        "result": "2003",
         "attempts": [],
-        "time": null
+        "time": 35.756563
       }
     },
     {
