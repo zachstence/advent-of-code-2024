@@ -1,5 +1,5 @@
 import run from "aocrunner";
-import { Coord, CoordSet } from "../utils/coord-set.js";
+import { Coord, CoordSet } from "../utils/coord-set/index.js";
 
 const MAX_ITERS = 1_000_000_000;
 
