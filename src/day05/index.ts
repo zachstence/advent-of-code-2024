@@ -47,35 +47,42 @@ const isUpdateCorrect = (update: Update, rules: Rules): boolean => {
   return true;
 };
 
+const sumMiddleNumbers = (arrays: number[][]): number =>
+  arrays.reduce<number>((sum, arr) => sum + arr[(arr.length - 1) / 2], 0);
+
 const part1 = (rawInput: string) => {
   const input = parseInput(rawInput);
-
   const correctUpdates = input.updates.filter((update) =>
     isUpdateCorrect(update, input.rules),
   );
-
-  const middlePages = correctUpdates.map(
-    (update) => update.list[(update.list.length - 1) / 2],
-  );
-
-  const sumOfMiddlePages = middlePages.reduce<number>(
-    (sum, num) => sum + num,
-    0,
-  );
-  return sumOfMiddlePages.toString();
+  const sum = sumMiddleNumbers(correctUpdates.map((u) => u.list));
+  return sum.toString();
 };
+
+const fixUpdate = (update: Update, rules: Rules): number[] =>
+  [...update.list].sort((a, b) => {
+    1;
+    if (rules.has(a) && rules.get(a)!.has(b)) return -1;
+    if (rules.has(b) && rules.get(b)!.has(a)) return 1;
+    return 0;
+  });
 
 const part2 = (rawInput: string) => {
   const input = parseInput(rawInput);
 
-  return;
+  const incorrectUpdates = input.updates.filter(
+    (update) => !isUpdateCorrect(update, input.rules),
+  );
+  const correctedUpdates = incorrectUpdates.map((update) =>
+    fixUpdate(update, input.rules),
+  );
+
+  const sum = sumMiddleNumbers(correctedUpdates);
+
+  return sum.toString();
 };
 
-run({
-  part1: {
-    tests: [
-      {
-        input: `
+const exampleInput = `
 47|53
 97|13
 97|61
@@ -104,7 +111,13 @@ run({
 75,97,47,61,53
 61,13,29
 97,13,75,29,47
-`,
+`;
+
+run({
+  part1: {
+    tests: [
+      {
+        input: exampleInput,
         expected: "143",
       },
     ],
@@ -112,13 +125,13 @@ run({
   },
   part2: {
     tests: [
-      // {
-      //   input: ``,
-      //   expected: "",
-      // },
+      {
+        input: exampleInput,
+        expected: "123",
+      },
     ],
     solution: part2,
   },
   trimTestInputs: true,
-  onlyTests: false,
+  // onlyTests: true,
 });
