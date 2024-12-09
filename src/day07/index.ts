@@ -5,6 +5,8 @@ type UnfilledEquation = {
   operands: number[];
 };
 
+type Operator = "+" | "*";
+
 type Input = UnfilledEquation[];
 
 const parseInput = (rawInput: string): Input =>
@@ -15,11 +17,56 @@ const parseInput = (rawInput: string): Input =>
     return { value, operands };
   });
 
+const evaluateOperation = (a: number, b: number, op: Operator): number => {
+  switch (op) {
+    case "+":
+      return a + b;
+    case "*":
+      return a * b;
+  }
+};
+
+const evaluate = (operands: number[], operators: Operator[]): number => {
+  const _operands = [...operands];
+  const _operators = [...operators];
+
+  while (_operands.length > 1) {
+    const a = _operands.shift()!;
+    const b = _operands.shift()!;
+    const op = _operators.shift()!;
+    const result = evaluateOperation(a, b, op);
+    _operands.unshift(result);
+  }
+
+  return _operands[0];
+};
+
+const getValidOperators = (e: UnfilledEquation): Operator[][] => {
+  const numOperators = e.operands.length - 1;
+  const numCombinations = 2 ** numOperators;
+  const combinations = Array.from({ length: numCombinations }).map(
+    (_, i) =>
+      i
+        .toString(2)
+        .padStart(numOperators, "0")
+        .replaceAll("0", "+")
+        .replaceAll("1", "*")
+        .split("") as Operator[],
+  );
+
+  const validCombinations = combinations.filter((operators) => {
+    const result = evaluate(e.operands, operators);
+    return result === e.value;
+  });
+
+  return validCombinations;
+};
+
 const part1 = (rawInput: string) => {
   const input = parseInput(rawInput);
-  console.log(input);
-
-  return;
+  const validEquations = input.filter((eq) => getValidOperators(eq).length > 0);
+  const sum = validEquations.reduce<number>((sum, e) => sum + e.value, 0);
+  return sum.toString();
 };
 
 const part2 = (rawInput: string) => {
@@ -60,5 +107,5 @@ run({
     solution: part2,
   },
   trimTestInputs: true,
-  onlyTests: true,
+  // onlyTests: true,
 });
