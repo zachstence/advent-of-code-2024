@@ -80,7 +80,9 @@ const isOutOfBounds = (
   return r < 0 || r >= input.numRows || c < 0 || c >= input.numCols;
 };
 
-const getGuardCoords = (input: Input): TupleSet<CoordWithDirection> => {
+const getGuardCoords = (
+  input: Input,
+): { coords: TupleSet<CoordWithDirection>; isLoop: boolean } => {
   let guardCoord: CoordWithDirection = [...input.start, "up"];
 
   const guardCoords = new TupleSet<CoordWithDirection>();
@@ -96,22 +98,48 @@ const getGuardCoords = (input: Input): TupleSet<CoordWithDirection> => {
     }
 
     guardCoord = nextCoord;
+
+    // If we are somewhere we have already been, stop because we will loop
+    if (guardCoords.has(guardCoord))
+      return { coords: guardCoords, isLoop: true };
+
     guardCoords.add(guardCoord);
   }
 
-  return guardCoords;
+  return { coords: guardCoords, isLoop: false };
+};
+
+const eq = <T extends unknown[]>(a: T, b: T): boolean =>
+  a.length === b.length && a.every((_, i) => a[i] === b[i]);
+
+const getObstacleLoopCoords = (input: Input): Coord[] => {
+  // The new obstacle must be placed somewhere in the guards path otherwise it would have no effect
+  const possibleCoords = getGuardCoords(input).coords.values({
+    depth: 2,
+  }) as unknown as Coord[];
+
+  const obstacleLoopCoords = possibleCoords.filter((possibleCoord) => {
+    if (eq(possibleCoord, input.start)) return false;
+
+    input.obstacles.add(possibleCoord);
+    const { isLoop } = getGuardCoords(input);
+    input.obstacles.remove(possibleCoord);
+    return isLoop;
+  });
+
+  return obstacleLoopCoords;
 };
 
 const part1 = (rawInput: string) => {
   const input = parseInput(rawInput);
-  const guardCoords = getGuardCoords(input).values({ depth: 2 });
+  const guardCoords = getGuardCoords(input).coords.values({ depth: 2 });
   return guardCoords.length.toString();
 };
 
 const part2 = (rawInput: string) => {
   const input = parseInput(rawInput);
-
-  return;
+  const coords = getObstacleLoopCoords(input);
+  return coords.length.toString();
 };
 
 const exampleInput = `
@@ -139,10 +167,10 @@ run({
   },
   part2: {
     tests: [
-      // {
-      //   input: ``,
-      //   expected: "",
-      // },
+      {
+        input: exampleInput,
+        expected: "6",
+      },
     ],
     solution: part2,
   },
