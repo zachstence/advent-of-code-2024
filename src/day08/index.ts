@@ -48,36 +48,55 @@ const isOutOfBounds = (coord: Coord, input: Input): boolean => {
   return r < 0 || r >= input.numRows || c < 0 || c >= input.numCols;
 };
 
-const findAntinodes = (a: Antenna, b: Antenna, input: Input): Antinode[] => {
+const findAntinodes = (
+  a: Antenna,
+  b: Antenna,
+  input: Input,
+  { includeResonantHarmonics }: { includeResonantHarmonics?: boolean } = {},
+): Coord[] => {
   const [a0, a1] = a.coord;
   const [b0, b1] = b.coord;
 
   // Slope
   const [d0, d1] = [a0 - b0, a1 - b1];
 
-  return <Antinode[]>[
-    {
-      type: "antinode",
-      coord: [b0 - d0, b1 - d1] as Coord,
-    },
-    { type: "antinode", coord: [a0 + d0, a1 + d1] as Coord },
-  ].filter((antinode) => !isOutOfBounds(antinode.coord, input));
+  if (includeResonantHarmonics) {
+    let coords: Coord[] = [];
+    let coord: Coord = [b0, b1];
+    while (!isOutOfBounds(coord, input)) {
+      coords.push([...coord]);
+      coord = [coord[0] - d0, coord[1] - d1];
+    }
+    coord = [a0, a1];
+    while (!isOutOfBounds(coord, input)) {
+      coords.push([...coord]);
+      coord = [coord[0] + d0, coord[1] + d1];
+    }
+    return coords;
+  } else {
+    return [[b0 - d0, b1 - d1] as Coord, [a0 + d0, a1 + d1] as Coord].filter(
+      (coord) => !isOutOfBounds(coord, input),
+    );
+  }
 };
 
-const findAllAntinodes = (input: Input): Coord[] => {
-  const antinodes = new TupleSet<Coord>();
+const findAllAntinodes = (
+  input: Input,
+  { includeResonantHarmonics }: { includeResonantHarmonics?: boolean } = {},
+): Coord[] => {
+  const coords = new TupleSet<Coord>();
   for (let i = 0; i < input.antennas.length; i++) {
     for (let j = i + 1; j < input.antennas.length; j++) {
       const a = input.antennas[i];
       const b = input.antennas[j];
       if (a.frequency !== b.frequency) continue;
 
-      findAntinodes(a, b, input).forEach((antinode) =>
-        antinodes.add(antinode.coord),
+      findAntinodes(a, b, input, { includeResonantHarmonics }).forEach(
+        (coord) => coords.add(coord),
       );
     }
   }
-  return antinodes.values();
+  return coords.values();
 };
 
 const part1 = (rawInput: string) => {
@@ -88,8 +107,8 @@ const part1 = (rawInput: string) => {
 
 const part2 = (rawInput: string) => {
   const input = parseInput(rawInput);
-
-  return;
+  const coords = findAllAntinodes(input, { includeResonantHarmonics: true });
+  return coords.length.toString();
 };
 
 const exampleInput = `
@@ -119,10 +138,10 @@ run({
   },
   part2: {
     tests: [
-      // {
-      //   input: ``,
-      //   expected: "",
-      // },
+      {
+        input: exampleInput,
+        expected: "34",
+      },
     ],
     solution: part2,
   },
