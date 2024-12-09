@@ -30,14 +30,16 @@ export class TupleSet<T extends any[]> {
     return true;
   };
 
-  values = (): T[] => {
+  values = ({ depth }: { depth?: number } = {}): T[] => {
     const getPaths = (
       tree: Tree,
       tuples: T[] = [],
       currentTuple: T = [] as unknown as T,
     ): T[] => {
       const isLeaf = tree.size === 0;
-      if (isLeaf) {
+      const reachedDepth =
+        typeof depth !== "undefined" && currentTuple.length === depth;
+      if (isLeaf || reachedDepth) {
         tuples.push(currentTuple);
       } else {
         tree.keys().forEach((key) => {
