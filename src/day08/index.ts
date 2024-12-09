@@ -1,15 +1,18 @@
 import run from "aocrunner";
 import { filterTruthy } from "../utils/filter-truthy.js";
+import { TupleSet } from "../utils/tuple-set/tuple-set.js";
+
+type Coord = [number, number];
 
 type Antenna = {
   type: "antenna";
-  coord: [number, number];
+  coord: Coord;
   frequency: string;
 };
 
 type Antinode = {
   type: "antinode";
-  coord: [number, number];
+  coord: Coord;
 };
 
 type Object = Antenna | Antinode;
@@ -40,11 +43,47 @@ const parseInput = (rawInput: string): Input => {
   return { antennas, numRows, numCols };
 };
 
+const isOutOfBounds = (coord: Coord, input: Input): boolean => {
+  const [r, c] = coord;
+  return r < 0 || r >= input.numRows || c < 0 || c >= input.numCols;
+};
+
+const findAntinodes = (a: Antenna, b: Antenna, input: Input): Antinode[] => {
+  const [a0, a1] = a.coord;
+  const [b0, b1] = b.coord;
+
+  // Slope
+  const [d0, d1] = [a0 - b0, a1 - b1];
+
+  return <Antinode[]>[
+    {
+      type: "antinode",
+      coord: [b0 - d0, b1 - d1] as Coord,
+    },
+    { type: "antinode", coord: [a0 + d0, a1 + d1] as Coord },
+  ].filter((antinode) => !isOutOfBounds(antinode.coord, input));
+};
+
+const findAllAntinodes = (input: Input): Coord[] => {
+  const antinodes = new TupleSet<Coord>();
+  for (let i = 0; i < input.antennas.length; i++) {
+    for (let j = i + 1; j < input.antennas.length; j++) {
+      const a = input.antennas[i];
+      const b = input.antennas[j];
+      if (a.frequency !== b.frequency) continue;
+
+      findAntinodes(a, b, input).forEach((antinode) =>
+        antinodes.add(antinode.coord),
+      );
+    }
+  }
+  return antinodes.values();
+};
+
 const part1 = (rawInput: string) => {
   const input = parseInput(rawInput);
-  console.log(input);
-
-  return;
+  const coords = findAllAntinodes(input);
+  return coords.length.toString();
 };
 
 const part2 = (rawInput: string) => {
@@ -88,5 +127,5 @@ run({
     solution: part2,
   },
   trimTestInputs: true,
-  onlyTests: true,
+  // onlyTests: true,
 });
