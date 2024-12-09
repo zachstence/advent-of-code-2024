@@ -1,28 +1,30 @@
 import run from "aocrunner";
-import { Coord, CoordSet } from "../utils/coord-set/index.js";
+import { TupleSet } from "../utils/tuple-set/index.js";
 
 const MAX_ITERS = 1_000_000_000;
 
 type Direction = "up" | "right" | "down" | "left";
 
+type Coord = [number, number];
+
 type Input = {
   start: Coord;
   direction: Direction;
-  obstacles: CoordSet;
+  obstacles: TupleSet<Coord>;
   numRows: number;
   numCols: number;
 };
 
 const parseInput = (rawInput: string): Input => {
   let start: Coord;
-  const obstacles = new CoordSet();
+  const obstacles = new TupleSet<Coord>();
   let numRows = 0;
   let numCols = 0;
 
   rawInput.split("\n").forEach((row, r) =>
     row.split("").forEach((char, c) => {
-      if (char === "^") start = { r, c };
-      if (char === "#") obstacles.add({ r, c });
+      if (char === "^") start = [r, c];
+      if (char === "#") obstacles.add([r, c]);
       numRows = Math.max(numRows, r + 1);
       numCols = Math.max(numCols, c + 1);
     }),
@@ -51,15 +53,16 @@ const getNextDirection = (direction: Direction): Direction => {
 };
 
 const getNextCoord = (coord: Coord, direction: Direction): Coord => {
+  const [r, c] = coord;
   switch (direction) {
     case "up":
-      return { r: coord.r - 1, c: coord.c };
+      return [r - 1, c];
     case "right":
-      return { r: coord.r, c: coord.c + 1 };
+      return [r, c + 1];
     case "down":
-      return { r: coord.r + 1, c: coord.c };
+      return [r + 1, c];
     case "left":
-      return { r: coord.r, c: coord.c - 1 };
+      return [r, c - 1];
   }
 };
 
@@ -67,8 +70,10 @@ const isOutOfBounds = (
   coord: Coord,
   numRows: number,
   numCols: number,
-): boolean =>
-  coord.r < 0 || coord.r >= numRows || coord.c < 0 || coord.c >= numCols;
+): boolean => {
+  const [r, c] = coord;
+  return r < 0 || r >= numRows || c < 0 || c >= numCols;
+};
 
 const part1 = (rawInput: string) => {
   const input = parseInput(rawInput);
@@ -77,7 +82,7 @@ const part1 = (rawInput: string) => {
   let direction = input.direction;
   const obstacles = input.obstacles;
 
-  const guardCoords = new CoordSet();
+  const guardCoords = new TupleSet();
 
   for (let i = 0; i < MAX_ITERS; i++) {
     const nextCoord = getNextCoord(guardCoord, direction);
