@@ -12,6 +12,33 @@ describe("TupleSet", () => {
     });
   });
 
+  describe("remove", () => {
+    it("should remove tuple", () => {
+      const tuple = [1, 2, 3, 4];
+      const tupleSet = new TupleSet();
+
+      tupleSet.add(tuple);
+      let values = tupleSet.values();
+      expect(values[0]).toEqual(tuple);
+
+      tupleSet.remove(tuple);
+      values = tupleSet.values();
+      expect(values).toHaveLength(0);
+    });
+    it("should remove one tuple but leave others", () => {
+      const tuple1 = [1, 2, 3, 4];
+      const tuple2 = [1, 3, 5, 7];
+      const tupleSet = new TupleSet();
+
+      tupleSet.add(tuple1);
+      tupleSet.add(tuple2);
+
+      tupleSet.remove(tuple1);
+      const values = tupleSet.values();
+      expect(values).toEqual([tuple2]);
+    });
+  });
+
   describe("has", () => {
     it("should return true if tuple has been added", () => {
       const tuple = [Math.random(), Math.random()];

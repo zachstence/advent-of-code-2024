@@ -21,6 +21,25 @@ export class TupleSet<T extends any[]> {
     this.#size++;
   };
 
+  remove = (tuple: T): void => {
+    if (!this.has(tuple)) return;
+
+    tuple.toReversed().forEach((_, i) => {
+      const path = tuple.slice(0, tuple.length - i - 1);
+      const key = tuple.slice(tuple.length - i - 1, tuple.length - i)[0];
+
+      let map = this.#map;
+      for (const value of path) {
+        map = map.get(value)!;
+      }
+      if (map.get(key)!.size === 0) {
+        map.delete(key);
+      }
+    });
+
+    this.#size--;
+  };
+
   has = (tuple: T): boolean => {
     let map = this.#map;
     for (const value of tuple) {
@@ -39,7 +58,7 @@ export class TupleSet<T extends any[]> {
       const isLeaf = tree.size === 0;
       const reachedDepth =
         typeof depth !== "undefined" && currentTuple.length === depth;
-      if (isLeaf || reachedDepth) {
+      if ((isLeaf || reachedDepth) && currentTuple.length) {
         tuples.push(currentTuple);
       } else {
         tree.keys().forEach((key) => {
