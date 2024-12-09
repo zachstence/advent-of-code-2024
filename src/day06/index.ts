@@ -7,6 +7,8 @@ type Direction = "up" | "right" | "down" | "left";
 
 type Coord = [number, number];
 
+type CoordWithDirection = [number, number, Direction];
+
 type Input = {
   start: Coord;
   direction: Direction;
@@ -39,65 +41,71 @@ const parseInput = (rawInput: string): Input => {
   };
 };
 
-const getNextDirection = (direction: Direction): Direction => {
+const turn = (coord: CoordWithDirection): CoordWithDirection => {
+  const direction = coord[2];
   switch (direction) {
     case "up":
-      return "right";
+      return [coord[0], coord[1], "right"];
     case "right":
-      return "down";
+      return [coord[0], coord[1], "down"];
     case "down":
-      return "left";
+      return [coord[0], coord[1], "left"];
     case "left":
-      return "up";
+      return [coord[0], coord[1], "up"];
   }
 };
 
-const getNextCoord = (coord: Coord, direction: Direction): Coord => {
-  const [r, c] = coord;
+const move = (coord: CoordWithDirection): CoordWithDirection => {
+  const [r, c, direction] = coord;
   switch (direction) {
     case "up":
-      return [r - 1, c];
+      return [r - 1, c, direction];
     case "right":
-      return [r, c + 1];
+      return [r, c + 1, direction];
     case "down":
-      return [r + 1, c];
+      return [r + 1, c, direction];
     case "left":
-      return [r, c - 1];
+      return [r, c - 1, direction];
   }
 };
+
+const isObstacle = (coord: Coord | CoordWithDirection, input: Input): boolean =>
+  input.obstacles.has([coord[0], coord[1]]);
 
 const isOutOfBounds = (
-  coord: Coord,
-  numRows: number,
-  numCols: number,
+  coord: Coord | CoordWithDirection,
+  input: Input,
 ): boolean => {
   const [r, c] = coord;
-  return r < 0 || r >= numRows || c < 0 || c >= numCols;
+  return r < 0 || r >= input.numRows || c < 0 || c >= input.numCols;
 };
 
-const part1 = (rawInput: string) => {
-  const input = parseInput(rawInput);
+const getGuardCoords = (input: Input): TupleSet<CoordWithDirection> => {
+  let guardCoord: CoordWithDirection = [...input.start, "up"];
 
-  let guardCoord = input.start;
-  let direction = input.direction;
-  const obstacles = input.obstacles;
-
-  const guardCoords = new TupleSet();
+  const guardCoords = new TupleSet<CoordWithDirection>();
+  guardCoords.add(guardCoord);
 
   for (let i = 0; i < MAX_ITERS; i++) {
-    const nextCoord = getNextCoord(guardCoord, direction);
-    if (isOutOfBounds(nextCoord, input.numRows, input.numCols)) break;
+    let nextCoord = move(guardCoord);
 
-    if (obstacles.has(nextCoord)) {
-      direction = getNextDirection(direction);
-      continue;
+    if (isOutOfBounds(nextCoord, input)) break;
+
+    if (isObstacle(nextCoord, input)) {
+      nextCoord = turn(guardCoord);
     }
 
     guardCoord = nextCoord;
     guardCoords.add(guardCoord);
   }
 
-  return guardCoords.size.toString();
+  return guardCoords;
+};
+
+const part1 = (rawInput: string) => {
+  const input = parseInput(rawInput);
+  const guardCoords = getGuardCoords(input).values({ depth: 2 });
+  return guardCoords.length.toString();
 };
 
 const part2 = (rawInput: string) => {
