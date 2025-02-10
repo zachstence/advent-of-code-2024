@@ -17,7 +17,7 @@
   "license": "ISC",
   "devDependencies": {
     "aocrunner": "^1.10.0",
-    "esbuild": "^0.24.0",
+    "esbuild": "^0.25.0",
     "prettier": "^2.8.0",
     "vitest": "^2.1.8"
   },
